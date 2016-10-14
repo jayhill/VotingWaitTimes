@@ -1,0 +1,1 @@
+<%@ Application Inherits="VotingWaitTimes.Global" %>
