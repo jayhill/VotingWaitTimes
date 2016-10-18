@@ -38,6 +38,20 @@ type private GetLocationSchedules =
 let getLocationSchedules (connectionString : string) =
     GetLocationSchedules.Create(connectionString).Execute()
 
+type private GetLocationSchedulesWithCurrentWaitTimes =
+    SqlCommandProvider<
+        "SELECT lx.id as location_id, lx.name as location_name, lx.short_name, lx.street, lx.city_state_zip,
+        		lsx.[date] AS schedule_date, lsx.start_time, lsx.end_time,
+        		wtxxx.wait_minutes, wtxxx.as_of FROM LocationSchedules AS lsx
+        	JOIN Locations AS lx ON lx.id = lsx.location_id
+        	LEFT OUTER JOIN
+        		(SELECT wtxx.* FROM WaitTimes as wtxx
+        			WHERE wtxx.as_of = (SELECT MAX(as_of) FROM WaitTimes as wtx WHERE wtx.location_id = wtxx.location_id
+        									AND CONVERT(DATE, wtx.as_of) = CONVERT(DATE, wtxx.as_of))) AS wtxxx
+        	ON lsx.location_id = wtxxx.location_id AND lsx.[date] = CONVERT(DATE, wtxxx.as_of)" , connectionString>
+let getLocationSchedulesWithCurrentWaitTimes (connectionString : string) =
+    (GetLocationSchedulesWithCurrentWaitTimes.Create connectionString).Execute() |> List.ofSeq
+
 type private GetLocationById =
     SqlCommandProvider<"SELECT * FROM Locations WHERE id = @id", connectionString>
 let getLocationById (connectionString : string) = 

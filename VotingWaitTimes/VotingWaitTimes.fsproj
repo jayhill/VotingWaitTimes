@@ -115,7 +115,7 @@
     <Compile Include="Data.fs" />
     <Compile Include="Util.fs" />
     <Compile Include="SmsHandler.fs" />
-    <Compile Include="Controllers\EarlyVotingLocationsController.fs" />
+    <Compile Include="Controllers\LocationsController.fs" />
     <Compile Include="Controllers\SmsController.fs" />
     <Compile Include="Controllers\WaitTimesController.fs" />
     <Content Include="Web.config" />
