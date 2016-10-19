@@ -7,16 +7,7 @@ open Data
 type ConfigMgr = System.Web.Configuration.WebConfigurationManager
 
 let connStr = System.Web.Configuration.WebConfigurationManager.AppSettings.["VOTING_CONN_STR"]
-
-module Twilio =
-    let private authToken = ConfigMgr.AppSettings.["TWILIO_AUTH_TOKEN"]
-    let private phoneNumber = ConfigMgr.AppSettings.["TWILIO_FROM_NUMBER"]
-    let accountSid = ConfigMgr.AppSettings.["TWILIO_ACCT_SID"]
-
-    let client = Twilio.TwilioRestClient(accountSid, authToken)
-    let sendTo (toNumber : PhoneNumber) (msg : string) =
-        client.SendMessage(phoneNumber, toNumber.ToString(), msg.ToString())
-        |> Data.logOutgoingMessage connStr
+let accountSid = ConfigMgr.AppSettings.["TWILIO_ACCT_SID"]
 
 let private listLocations () =
     Data.getLocationSchedules connStr
@@ -24,12 +15,12 @@ let private listLocations () =
     |> Seq.map (fun x -> sprintf "%i) %s" x.id x.short_name)
     |> String.join "\n"
 
-let private updateWaitTime sender minutes =
+let private updateQueue sender queueLength =
     match Data.getLocationByPhoneNumber connStr sender with
     | None -> "This phone is not registered to a location.\nText LIST to see a list of early voting locations."
     | Some loc ->
-        Data.updateWaitTime connStr sender loc.id minutes |> ignore
-        sprintf "Wait time for %s is now %i minutes.\nResend to make a correction." loc.name minutes
+        Data.updateQueueLength connStr sender loc.id queueLength |> ignore
+        sprintf "Queue length for %s is now %i people.\nResend to make a correction." loc.name queueLength
 
 let private selectLocation sender number =
     match number with
@@ -55,10 +46,10 @@ let private selectLocation sender number =
             sprintf "No location found for number [%i]. Please choose again.\nText LIST to see locations." i
     | _ -> sprintf "Failed to register a location with input [%s].\nText OPT for options." number
 
-let private options = "Early Voting Wait Times
+let private options = "Early Voting Wait Queues
 LIST : Show locations
 LOC # : Register phone to loc
-# : Update wait minutes"
+# : Update queue length"
 
 let private unhandled sender status =
     match status with
@@ -66,7 +57,7 @@ let private unhandled sender status =
     | PhoneNumberStatus.Unregistered ->
         "You must register this phone to an early voting location.\nText LIST to see all locations."
     | PhoneNumberStatus.Added -> 
-        sprintf "Welcome to Buncombe County early voting wait times.\nText LIST to see early voting locations.\nText LOC # to choose your location."
+        sprintf "Welcome to Buncombe County early voting wait queues.\nText LIST to see early voting locations.\nText LOC # to choose your location."
 
 let private handleValidMsg (msg : Twilio.Message) =
     let body = msg.Body.Trim()
@@ -76,12 +67,12 @@ let private handleValidMsg (msg : Twilio.Message) =
     | IgnoreCase "list"
     | RegexMatch "^loc(?:ation)?$" _ -> listLocations ()
     | RegexCapture "^loc(?:ation)?\s+(\d+)" matches -> selectLocation sender (matches.[1])
-    | ParseInt i -> updateWaitTime sender i
+    | ParseInt i -> updateQueue sender i
     | RegexMatch "^opt(?:ion)?s?" _ -> options
     | _ -> unhandled sender status
 
 let handleMessage (msg : Twilio.Message) =
     Data.logIncomingMessage connStr msg
     match msg.AccountSid with
-        | sid when sid = Twilio.accountSid -> handleValidMsg msg |> Some
+        | sid when sid = accountSid -> handleValidMsg msg |> Some
         | _ -> None

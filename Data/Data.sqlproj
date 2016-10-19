@@ -59,7 +59,7 @@
     <Folder Include="Properties" />
   </ItemGroup>
   <ItemGroup>
-    <Build Include="WaitTimes.sql" />
+    <Build Include="QueueLengths.sql" />
     <Build Include="Locations.sql" />
     <Build Include="LocationPhoneNumbers.sql" />
     <Build Include="LocationSchedules.sql" />

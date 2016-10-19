@@ -13,10 +13,8 @@ open System.Xml.Linq
 open Newtonsoft.Json
 open FSharp.Data.SqlClient
 
-type WaitTimesController() =
-    inherit ApiController()
-
-    let connStr = System.Web.Configuration.WebConfigurationManager.AppSettings.["VOTING_CONN_STR"]
+type QueueLengthsController() =
+    inherit VotingApiController()
 
     let formatTime (dt : DateTime option) =
         match dt with
@@ -29,22 +27,22 @@ type WaitTimesController() =
             let minutes = time.Minute.ToString().PadLeft(2, '0')
             sprintf "%i:%s" hour minutes
 
-    let formatWait (i : int option) =
+    let formatQueueLength (i : int option) =
         match i with
         | None -> " - "
         | Some mins -> mins.ToString()
 
     member this.Get () =
         let msg = 
-            Data.getWaitTimes connStr
+            Data.getQueueLengths base.ConnectionString
             |> List.map (fun x ->
                 sprintf "%s%s%s%s%s"
                     (x.id.ToString().PadRight(4))
                     (x.name.PadRight(48))
-                    ((formatWait x.wait_minutes).PadRight(8))
+                    ((formatQueueLength x.queue_length).PadRight(8))
                     ((formatTime x.as_of).PadRight(12))
                     (defaultArg x.from_number " - "))
-            |> fun xs -> sprintf "ID  %s%s%sREPORTED BY" ("LOCATION".PadRight(48)) ("WAIT".PadRight(8)) ("AS OF".PadRight(12)) :: xs
+            |> fun xs -> sprintf "ID  %s%s%sREPORTED BY" ("LOCATION".PadRight(48)) ("QUEUE".PadRight(8)) ("AS OF".PadRight(12)) :: xs
             |> String.join "\n\n"
         
         let response = new HttpResponseMessage(HttpStatusCode.OK, Content = new StringContent(msg))

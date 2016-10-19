@@ -13,7 +13,9 @@ type Attributes = {
 }
 
 type SmsController () =
-    inherit ApiController()
+    inherit VotingApiController()
+
+    let log = Data.logOutgoingMessage base.ConnectionString
 
     member x.Post (msg : Twilio.Message) =
         match SmsHandler.handleMessage msg with
@@ -24,5 +26,9 @@ type SmsController () =
             let response = new HttpResponseMessage(HttpStatusCode.OK)
             let content = new StringContent(message.ToString(), Text.Encoding.UTF8, "application/xml")
             response.Content <- content
+
+            log (Data.PhoneNumber msg.From) result
+
             base.ResponseMessage response :> IHttpActionResult
+
         | _ -> base.BadRequest (sprintf "Possible invalid SID: %s" msg.AccountSid) :> IHttpActionResult

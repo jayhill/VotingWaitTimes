@@ -115,9 +115,10 @@
     <Compile Include="Data.fs" />
     <Compile Include="Util.fs" />
     <Compile Include="SmsHandler.fs" />
+    <Compile Include="Controllers\VotingApiController.fs" />
     <Compile Include="Controllers\LocationsController.fs" />
     <Compile Include="Controllers\SmsController.fs" />
-    <Compile Include="Controllers\WaitTimesController.fs" />
+    <Compile Include="Controllers\QueueLengthsController.fs" />
     <Content Include="Web.config" />
     <Content Include="Global.asax" />
     <Compile Include="Global.asax.fs">

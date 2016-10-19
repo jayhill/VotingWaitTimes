@@ -23,25 +23,23 @@ type location = {
 }
 
 type LocationsController() =
-    inherit ApiController()
+    inherit VotingApiController()
 
-    let connStr = System.Web.Configuration.WebConfigurationManager.AppSettings.["VOTING_CONN_STR"]
-
-    let getWaitMinutes startTime endTime (now : DateTime) waitMins (asOf : DateTime option) =
-        match waitMins with
+    let formatQueueLength startTime endTime (now : DateTime) queueLength (asOf : DateTime option) =
+        match queueLength with
         | None -> ""
         | Some mins ->
             match now.Hour with
             | h when h < startTime || endTime < h -> ""
             | _ ->
                 match asOf with
-                | Some asOf -> sprintf "%i minutes (as of %s)" mins (asOf.ToShortTimeString())
-                | None -> sprintf "%i minutes" mins
+                | Some asOf -> sprintf "%i people (as of %s)" mins (asOf.ToShortTimeString())
+                | None -> sprintf "%i people" mins
 
     member x.Get() =
         let now = DateTime.Now
         let schedules =
-            Data.getLocationSchedulesWithCurrentWaitTimes connStr
+            Data.getLocationSchedulesWithCurrentWaitTimes base.ConnectionString
             |> Seq.filter (fun x -> x.location_id > 0)
             |> Seq.filter (fun x -> now.Date < x.schedule_date || now.Hour < x.end_time)
             |> List.ofSeq
@@ -61,7 +59,7 @@ type LocationsController() =
                         cityStateZip = x.city_state_zip
                         date = x.schedule_date
                         hours = formatTimes x.start_time x.end_time
-                        wait = getWaitMinutes x.start_time x.end_time now x.wait_minutes x.as_of
+                        wait = formatQueueLength x.start_time x.end_time now x.queue_length x.as_of
                     })
 
         base.Json results
