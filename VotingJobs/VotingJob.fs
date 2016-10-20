@@ -8,7 +8,7 @@ open System.Timers
 open FSharp.Data
 
 type VotingJob () =
-    let interval = float (1000 * 30) // 60 * 2)
+    let interval = float (1000 * 60 * 2)
     let timer = new Timer(interval)
     do timer.AutoReset <- true
 
@@ -22,8 +22,9 @@ type VotingJob () =
             | ex -> Console.WriteLine ex.Message)
 
     member this.Start () =
-        Console.WriteLine "timer started"
+        doJobs ()
         timer.Start()
+        Console.WriteLine "timer started"
     member this.Stop () =
         Console.WriteLine "timer stopped"
         timer.Stop()

@@ -19,13 +19,7 @@ type QueueLengthsController() =
     let formatTime (dt : DateTime option) =
         match dt with
         | None -> " - "
-        | Some time ->
-            let hour = 
-                match time.Hour with
-                | h when 12 < h -> h - 13
-                | h -> h
-            let minutes = time.Minute.ToString().PadLeft(2, '0')
-            sprintf "%i:%s" hour minutes
+        | Some time -> time.ToShortTimeString()
 
     let formatQueueLength (i : int option) =
         match i with
