@@ -62,12 +62,13 @@ let reportToState () =
         |> Seq.map (fun x -> sprintf "Buncombe,%s,%s" x.code (x.queue_length.Value.ToString()))
         |> List.ofSeq
         |> function
-            | [] -> appLog <| Msg ("found no entries for reporting at " + (now.ToShortTimeString()))
+            | [] -> appLog <| Msg ("no candidates for reporting at this time" + (now.ToShortTimeString()))
             | data ->
                 let exec () =
                     sendEmailToState data now
                     UpdateLastReport.Create(connStr).Execute() |> ignore
                 match LastReport.Create(connStr).Execute() with
                     | None -> exec ()
+                    | Some lastReport when lastReport.Date < now.Date -> exec ()
                     | Some lastReport when ``59 minutes`` < (now.TimeOfDay - lastReport.TimeOfDay) -> exec ()
                     | _ -> ()
