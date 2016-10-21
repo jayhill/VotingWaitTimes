@@ -26,17 +26,22 @@ type QueueLengthsController() =
         | None -> " - "
         | Some mins -> mins.ToString()
 
+    let formatPhoneNumber (num : string option) =
+        match num with
+        | None -> "--------------"
+        | Some num -> sprintf "(%s) XXX-%s" (num.[2..4]) (num.[8..])
+
     member this.Get () =
         let msg = 
             Data.getQueueLengths base.ConnectionString
             |> List.map (fun x ->
-                sprintf "%s%s%s%s%s"
-                    (x.id.ToString().PadRight(4))
+                sprintf "%s  %s%s   %s     %s"
+                    (x.id.ToString().PadLeft(2))
                     (x.name.PadRight(48))
-                    ((formatQueueLength x.queue_length).PadRight(8))
-                    ((formatTime x.as_of).PadRight(12))
-                    (defaultArg x.from_number " - "))
-            |> fun xs -> sprintf "ID  %s%s%sREPORTED BY" ("LOCATION".PadRight(48)) ("QUEUE".PadRight(8)) ("AS OF".PadRight(12)) :: xs
+                    ((formatQueueLength x.queue_length).PadLeft(4))
+                    ((formatTime x.as_of).PadLeft(12))
+                    (formatPhoneNumber x.from_number))
+            |> fun xs -> sprintf "ID  %s%s%s     REPORTED BY" ("LOCATION".PadRight(44)) ("QUEUE".PadLeft(8)) ("AS OF".PadLeft(15)) :: xs
             |> String.join "\n\n"
         
         let response = new HttpResponseMessage(HttpStatusCode.OK, Content = new StringContent(msg))

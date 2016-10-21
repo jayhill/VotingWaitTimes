@@ -56,7 +56,7 @@ let reportToState () =
     let now = DateTime.Now
     appLog <| Msg (sprintf "began running state reporting job at %s" (now.ToShortTimeString()))
     StateReportingQuery.Create(connStr).Execute()
-        |> Seq.filter (fun x -> TimeSpan.FromHours(float x.start_time.Value).Add(TimeSpan.FromMinutes(-15.)) <= now.TimeOfDay)
+        |> Seq.filter (fun x -> TimeSpan.FromHours(float x.start_time.Value).Add(TimeSpan.FromMinutes(-1.)) <= now.TimeOfDay)
         |> Seq.filter (fun x -> now.TimeOfDay <= TimeSpan.FromHours(float x.end_time.Value).Add(TimeSpan.FromMinutes(15.)))
         |> Seq.filter (fun x -> x.queue_length.IsSome)
         |> Seq.map (fun x -> sprintf "Buncombe,%s,%s" x.code (x.queue_length.Value.ToString()))
