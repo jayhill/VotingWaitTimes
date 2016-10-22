@@ -64,10 +64,14 @@ let private handleValidMsg (msg : Twilio.Message) =
     let sender = PhoneNumber msg.From
     let status = Data.getPhoneNumberStatus connStr sender
     match body with
+    | "" as blank -> blank
     | IgnoreCase "list"
     | RegexMatch "^loc(?:ation)?$" _ -> listLocations ()
     | RegexCapture "^loc(?:ation)?\s+(\d+)" matches -> selectLocation sender (matches.[1])
-    | ParseInt i -> updateQueue sender i
+    | ParseInt i ->
+        match i with
+        | _ when i < 0 -> "ERROR: [%i] is not valid.\nThe number of voters in queue must be non-negative."
+        | _ -> updateQueue sender i
     | RegexMatch "^opt(?:ion)?s?" _ -> options
     | _ -> unhandled sender status
 

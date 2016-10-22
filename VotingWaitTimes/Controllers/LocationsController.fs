@@ -41,7 +41,7 @@ type LocationsController() =
         let schedules =
             Data.getLocationSchedulesWithCurrentWaitTimes base.ConnectionString
             |> Seq.filter (fun x -> x.location_id > 0)
-            |> Seq.filter (fun x -> now.Date < x.schedule_date || now.Hour < x.end_time)
+            |> Seq.filter (fun x -> now.Date < x.schedule_date || (now.Date = x.schedule_date && now.Hour < x.end_time))
             |> List.ofSeq
 
         let results =
